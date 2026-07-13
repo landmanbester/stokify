@@ -6,6 +6,7 @@ transpiled pipeline end-to-end on a local Ray cluster with monitoring and
 asserts events + per-task diagnostics flow, mirroring the classic path.
 """
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -49,13 +50,17 @@ def test_committed_output_is_current():
 
 
 def test_transpiled_cli_help():
+    # Rich force-enables colour on GitHub Actions; NO_COLOR keeps the output
+    # plain so substring assertions see option names unsplit by ANSI codes.
+    env = {**os.environ, "NO_COLOR": "1", "TERM": "dumb"}
     result = subprocess.run(
         [sys.executable, "-m", "stokify", "transpiled", "run", "--help"],
         capture_output=True,
         text=True,
+        env=env,
     )
     if result.returncode != 0:  # no __main__; go through the console script
-        result = subprocess.run(["stokify", "transpiled", "run", "--help"], capture_output=True, text=True)
+        result = subprocess.run(["stokify", "transpiled", "run", "--help"], capture_output=True, text=True, env=env)
     assert result.returncode == 0
     assert "--base-dir" in result.stdout
     assert "--memory-mode" in result.stdout

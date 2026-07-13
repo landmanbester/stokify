@@ -28,7 +28,7 @@ def run(
     memory_mode: Annotated[
         str,
         typer.Option(
-            help="{'Memory mode': 'greedy (plasma-resident) or conservative (store-backed).'}",
+            help="Memory mode: greedy (plasma-resident) or conservative (store-backed).",
         ),
     ] = "greedy",
     n_band: Annotated[

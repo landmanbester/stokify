@@ -21,7 +21,7 @@ stokify:
       dtype: str
       default: greedy
       info:
-        Memory mode: greedy (plasma-resident) or conservative (store-backed).
+        'Memory mode: greedy (plasma-resident) or conservative (store-backed).'
     n-band:
       dtype: int
       default: 4
