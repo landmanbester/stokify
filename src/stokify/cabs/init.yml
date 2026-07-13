@@ -1,0 +1,47 @@
+cabs:
+  init:
+    flavour: python
+    command: stokify.core.init.init
+    name: init
+    info:
+      Read a measurement set into a synthetic image cube.
+    inputs:
+      memory-mode:
+        info:
+          'Memory mode: greedy (plasma-resident) or conservative (store-backed).'
+        choices:
+        - greedy
+        - conservative
+        default: greedy
+      n-band:
+        info:
+          Number of frequency bands.
+        dtype: int
+        default: 4
+      n-stokes:
+        info:
+          Number of Stokes parameters.
+        dtype: int
+        default: 2
+      n-x:
+        info:
+          Image width in pixels.
+        dtype: int
+        default: 256
+      n-y:
+        info:
+          Image height in pixels.
+        dtype: int
+        default: 256
+      n-steps:
+        info:
+          Number of simulated read blocks.
+        dtype: int
+        default: 8
+    outputs:
+      output:
+        dtype: Directory
+        info:
+          Output dataset directory (zarr).
+        required: true
+        mkdir: true

@@ -1,0 +1,71 @@
+_include:
+  - (stokify.cabs)init.yml
+  - (stokify.cabs)process.yml
+  - (stokify.cabs)image.yml
+
+stokify:
+  name: stokify
+  info:
+    Restricted-subset demonstrator recipe.
+    Chains init -> process -> image using only =recipe.x bindings and
+    {recipe.x} interpolation (no =IF / =IFSET / arithmetic / aliases).
+
+  inputs:
+    base-dir:
+      dtype: Directory
+      required: true
+      mkdir: true
+      info:
+        Base output directory for all data products.
+    memory-mode:
+      dtype: str
+      default: greedy
+      info:
+        Memory mode: greedy (plasma-resident) or conservative (store-backed).
+    n-band:
+      dtype: int
+      default: 4
+    n-stokes:
+      dtype: int
+      default: 2
+    n-x:
+      dtype: int
+      default: 256
+    n-y:
+      dtype: int
+      default: 256
+    niter:
+      dtype: int
+      default: 10
+      info:
+        Iterations for the process and image steps.
+
+  steps:
+    init:
+      cab: init
+      info: Read a measurement set into a synthetic image cube.
+      params:
+        output: '{recipe.base-dir}/init.zarr'
+        memory-mode: =recipe.memory-mode
+        n-band: =recipe.n-band
+        n-stokes: =recipe.n-stokes
+        n-x: =recipe.n-x
+        n-y: =recipe.n-y
+
+    process:
+      cab: process
+      info: Transform coherencies into image-ready Stokes visibilities.
+      params:
+        input-data: '{recipe.base-dir}/init.zarr'
+        output: '{recipe.base-dir}/process.zarr'
+        memory-mode: =recipe.memory-mode
+        n-iterations: =recipe.niter
+
+    image:
+      cab: image
+      info: Grid and image the Stokes visibilities.
+      params:
+        input-data: '{recipe.base-dir}/process.zarr'
+        output: '{recipe.base-dir}/image.zarr'
+        memory-mode: =recipe.memory-mode
+        n-iterations: =recipe.niter

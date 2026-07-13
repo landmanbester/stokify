@@ -1,0 +1,34 @@
+cabs:
+  image:
+    flavour: python
+    command: stokify.core.image.image
+    name: image
+    info:
+      Grid and image the Stokes visibilities.
+    inputs:
+      input-data:
+        info:
+          Upstream dataset directory (zarr).
+        dtype: Directory
+        required: true
+        policies:
+          positional: true
+      memory-mode:
+        info:
+          'Memory mode: greedy (plasma-resident) or conservative (store-backed).'
+        choices:
+        - greedy
+        - conservative
+        default: greedy
+      n-iterations:
+        info:
+          Number of synthetic major cycles.
+        dtype: int
+        default: 10
+    outputs:
+      output:
+        dtype: Directory
+        info:
+          Output image directory (zarr).
+        required: true
+        mkdir: true
