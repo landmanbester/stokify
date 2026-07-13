@@ -40,7 +40,7 @@ full = [
 # Local demonstrator: pull hip-cargo (with the unreleased apis-branch monitoring
 # and progress APIs) directly from the working checkout rather than PyPI.
 [tool.uv.sources]
-hip-cargo = { path = "/home/bester/software/hip-cargo", editable = true }
+hip-cargo = { path = "../hip-cargo", editable = true }
 
 [project.urls]
 Homepage = "https://github.com/landmanbester/stokify"
