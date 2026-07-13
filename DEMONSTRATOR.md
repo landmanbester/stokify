@@ -159,18 +159,19 @@ hand; these are the steps the templates should eventually automate:
 
 ---
 
-## Planned: per-task diagnostics (RFC §5.10, spike stage 2.6)
+## Per-task diagnostics (RFC §5.10, spike stage 2.6)
 
-**Not yet built.** The next monitoring increment is the lightweight per-task
-diagnostics wrapper designed in the RFC (`hip-cargo/docs/design/transpile-rfc.md`
-§5.10): each task emits one `DIAGNOSTIC` event (stdlib `getrusage` deltas —
-wall / user / system CPU, peak RSS, block I/O — plus lazy-import time), and the
-monitoring server joins these with the step timeline and the declared per-step
-resource requests at `GET /api/progress/{job_id}/diagnostics`. That
-requested-vs-used breakdown is the machine-readable contract an optimising
-agent consumes; Ray's Dashboard keeps the cluster-wide view, Stimela's coarse
-profiling has no per-task equivalent. When implemented, `demo.py` will print a
-per-task diagnostics table and gate `RESULT: PASS` on the documented field set.
+**Implemented.** Each task emits one `DIAGNOSTIC` event (stdlib `getrusage`
+deltas — wall / user / system CPU, peak RSS, block I/O — plus lazy-import
+time via `annotate_diagnostics` in `runtime/tasks.py`), and the monitoring
+server joins these with the step timeline and the declared per-step resource
+requests at `GET /api/progress/{job_id}/diagnostics`. That requested-vs-used
+breakdown is the machine-readable contract an optimising agent consumes;
+Ray's Dashboard keeps the cluster-wide view, Stimela's coarse profiling has
+no per-task equivalent. `demo.py` prints the per-task diagnostics table and
+gates `RESULT: PASS` on the documented field set. Full schema, caveats, and
+the optimisation playbook: `hip-cargo/docs/wiki/diagnostics.md` and
+`hip-cargo/docs/wiki/optimising-pipelines.md`.
 
 ---
 
