@@ -7,6 +7,11 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# stokify's [tool.uv.sources] points hip-cargo at ../hip-cargo (side-by-side
+# checkout). CI recreates that layout; flip the ref once the apis line merges.
+env:
+  HIP_CARGO_REF: apis
+
 jobs:
   quality:
     name: Code Quality
@@ -47,6 +52,10 @@ jobs:
           key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
           restore-keys: |
             ${{ runner.os }}-uv-
+
+      - name: Clone hip-cargo (side-by-side path dependency)
+        if: env.SKIP_CHECKS != 'true'
+        run: git clone --depth 1 --branch "$HIP_CARGO_REF" https://github.com/landmanbester/hip-cargo.git ../hip-cargo
 
       - name: Install dependencies
         if: env.SKIP_CHECKS != 'true'
@@ -105,6 +114,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-uv-py${{ matrix.python-version }}-
             ${{ runner.os }}-uv-
+
+      - name: Clone hip-cargo (side-by-side path dependency)
+        if: env.SKIP_CHECKS != 'true'
+        run: git clone --depth 1 --branch "$HIP_CARGO_REF" https://github.com/landmanbester/hip-cargo.git ../hip-cargo
 
       - name: Install dependencies
         if: env.SKIP_CHECKS != 'true'
