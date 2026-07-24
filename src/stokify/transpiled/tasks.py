@@ -18,6 +18,18 @@ def _activate_backend() -> None:
     set_backend(RayProgressBackend(get_or_create_aggregator()))
 
 
+@ray.remote(num_cpus=0)
+def _check(ref_holder: list) -> bool:
+    """Surface a step's error without materialising its dataset on the driver.
+
+    The ObjectRef arrives unresolved inside a list; ray.get here re-raises a
+    failed step's exception, while a successful dataset deserialises in this
+    zero-cpu worker (plasma-local), never in the lightweight driver.
+    """
+    ray.get(ref_holder[0])
+    return True
+
+
 @ray.remote
 def init_task(
     memory_mode: str, job_id: str, work_dir: str, monitor: bool, n_band: int, n_stokes: int, n_x: int, n_y: int

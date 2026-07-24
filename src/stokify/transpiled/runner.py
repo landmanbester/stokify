@@ -64,17 +64,32 @@ def run_pipeline(
     ref_init = tasks.init_task.remote(
         memory_mode, job_id, base_dir, monitor, n_band=n_band, n_stokes=n_stokes, n_x=n_x, n_y=n_y
     )
-    ray.wait([ref_init])
+    try:
+        ray.get(tasks._check.remote([ref_init]))
+    except Exception as exc:
+        _emit(EventType.STEP_FAILED, job_id, "init", message=str(exc), extra={"step_index": 0})
+        _emit(EventType.FAILED, job_id, "stokify", message="step 'init' failed")
+        raise
     _emit(EventType.STEP_COMPLETED, job_id, "init", extra={"step_index": 0})
 
     _emit(EventType.STEP_STARTED, job_id, "process", extra={"step_index": 1})
     ref_process = tasks.process_task.remote(ref_init, memory_mode, job_id, base_dir, monitor, n_iterations=niter)
-    ray.wait([ref_process])
+    try:
+        ray.get(tasks._check.remote([ref_process]))
+    except Exception as exc:
+        _emit(EventType.STEP_FAILED, job_id, "process", message=str(exc), extra={"step_index": 1})
+        _emit(EventType.FAILED, job_id, "stokify", message="step 'process' failed")
+        raise
     _emit(EventType.STEP_COMPLETED, job_id, "process", extra={"step_index": 1})
 
     _emit(EventType.STEP_STARTED, job_id, "image", extra={"step_index": 2})
     ref_image = tasks.image_task.remote(ref_process, memory_mode, job_id, base_dir, monitor, n_iterations=niter)
-    ray.wait([ref_image])
+    try:
+        ray.get(tasks._check.remote([ref_image]))
+    except Exception as exc:
+        _emit(EventType.STEP_FAILED, job_id, "image", message=str(exc), extra={"step_index": 2})
+        _emit(EventType.FAILED, job_id, "stokify", message="step 'image' failed")
+        raise
     _emit(EventType.STEP_COMPLETED, job_id, "image", extra={"step_index": 2})
 
     _emit(EventType.COMPLETED, job_id, "stokify", message="pipeline complete")
