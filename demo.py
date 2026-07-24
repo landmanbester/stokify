@@ -108,7 +108,7 @@ def _try_live_ws(client) -> int:
     return len(frames)
 
 
-def run_demo(memory_mode: str = "greedy") -> int:
+def run_demo(memory_mode: str = "greedy", transpiled: bool = False) -> int:
     """Run the pipeline with monitoring and verify the API. Returns exit code."""
     import ray
     from fastapi.testclient import TestClient
@@ -116,7 +116,10 @@ def run_demo(memory_mode: str = "greedy") -> int:
     from hip_cargo.monitoring.server import create_app
     from hip_cargo.utils.progress import set_backend
 
-    from stokify.runtime.runner import run_pipeline
+    if transpiled:
+        from stokify.transpiled.runner import run_pipeline
+    else:
+        from stokify.runtime.runner import run_pipeline
 
     print(f"\n{RULE}\n stokify monitoring demonstrator  (RFC §12 stage 2.5)\n{RULE}")
 
@@ -127,8 +130,11 @@ def run_demo(memory_mode: str = "greedy") -> int:
     set_backend(RayProgressBackend(aggregator))
 
     work_dir = tempfile.mkdtemp(prefix="stokify_demo_")
-    print(f"\n=== Running stokify pipeline (memory_mode={memory_mode}) ===")
+    variant = "transpiled (hip-cargo transpile output)" if transpiled else "hand-written runtime"
+    print(f"\n=== Running stokify pipeline (memory_mode={memory_mode}, runner: {variant}) ===")
     t0 = time.time()
+    # The generated runner's signature comes from the recipe inputs; it is
+    # call-compatible with the hand-written one for the arguments used here.
     job_id, _final_ref = run_pipeline(work_dir, memory_mode=memory_mode, monitor=True, n_x=128, n_y=128)
     n_events = _settle(aggregator, job_id)
     print(f"Pipeline complete in {time.time() - t0:.1f}s. job_id={job_id}, {n_events} events captured.")
@@ -271,8 +277,13 @@ def main() -> int:
         default="greedy",
         help="Which memory mode to run the demonstrator in.",
     )
+    parser.add_argument(
+        "--transpiled",
+        action="store_true",
+        help="Drive the pipeline through the generated src/stokify/transpiled/ runner instead of runtime/.",
+    )
     args = parser.parse_args()
-    return run_demo(args.memory_mode)
+    return run_demo(args.memory_mode, transpiled=args.transpiled)
 
 
 if __name__ == "__main__":

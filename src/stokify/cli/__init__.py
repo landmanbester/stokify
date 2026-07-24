@@ -21,6 +21,7 @@ from stokify.cli.init import init  # noqa: E402
 from stokify.cli.onboard import onboard  # noqa: E402
 from stokify.cli.process import process  # noqa: E402
 from stokify.runtime.cli import monitor, run, watch  # noqa: E402
+from stokify.transpiled.cli import app as transpiled_app  # noqa: E402
 
 app.command(name="onboard")(onboard)
 app.command(name="init")(init)
@@ -29,5 +30,6 @@ app.command(name="image")(image)
 app.command(name="run")(run)
 app.command(name="monitor")(monitor)
 app.command(name="watch")(watch)
+app.add_typer(transpiled_app, name="transpiled")
 
 __all__ = ["app"]

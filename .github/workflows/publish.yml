@@ -31,6 +31,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-uv-
 
+      - name: Clone hip-cargo (side-by-side path dependency)
+        run: git clone --depth 1 --branch apis https://github.com/landmanbester/hip-cargo.git ../hip-cargo
+
       - name: Install dependencies
         run: uv sync --group dev
 

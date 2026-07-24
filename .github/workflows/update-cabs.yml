@@ -14,7 +14,20 @@ jobs:
     if: github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message, '[skip checks]')
 
     steps:
+      - name: Check for App credentials
+        id: creds
+        env:
+          APP_CLIENT_ID: ${{ secrets.APP_CLIENT_ID }}
+        run: |
+          if [ -z "$APP_CLIENT_ID" ]; then
+            echo "have=false" >> "$GITHUB_OUTPUT"
+            echo "APP_CLIENT_ID/APP_PRIVATE_KEY not configured; skipping cab update."
+          else
+            echo "have=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Generate Token
+        if: steps.creds.outputs.have == 'true'
         id: generate_token
         uses: actions/create-github-app-token@v3
         with:
@@ -22,19 +35,23 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: Check out code
+        if: steps.creds.outputs.have == 'true'
         uses: actions/checkout@v6
         with:
           token: ${{ steps.generate_token.outputs.token }}
 
       - name: Set up Python
+        if: steps.creds.outputs.have == 'true'
         uses: actions/setup-python@v6
         with:
           python-version: "3.10"
 
       - name: Set up uv
+        if: steps.creds.outputs.have == 'true'
         uses: astral-sh/setup-uv@v7
 
       - name: Cache uv dependencies
+        if: steps.creds.outputs.have == 'true'
         uses: actions/cache@v5
         with:
           path: ~/.cache/uv
@@ -42,13 +59,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-uv-
 
+      - name: Clone hip-cargo (side-by-side path dependency)
+        if: steps.creds.outputs.have == 'true'
+        run: git clone --depth 1 --branch apis https://github.com/landmanbester/hip-cargo.git ../hip-cargo
+
       - name: Install dependencies
+        if: steps.creds.outputs.have == 'true'
         run: uv sync
 
       - name: Install package
         run: uv pip install -e .
 
       - name: Update container image tag to latest
+        if: steps.creds.outputs.have == 'true'
         run: |
           python -c "
           import re
@@ -59,9 +82,11 @@ jobs:
           "
 
       - name: Regenerate cab definitions with latest tag
+        if: steps.creds.outputs.have == 'true'
         run: uv run hip-cargo generate-cabs --module 'src/stokify/cli/*.py' --output-dir src/stokify/cabs
 
       - name: Check for changes
+        if: steps.creds.outputs.have == 'true'
         id: check_changes
         run: |
           if git diff --quiet src/stokify/cabs/*.yml src/stokify/_container_image.py; then
@@ -71,7 +96,7 @@ jobs:
           fi
 
       - name: Commit and push updated cabs
-        if: steps.check_changes.outputs.changed == 'true'
+        if: steps.creds.outputs.have == 'true' && steps.check_changes.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
